@@ -1,35 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import type { User } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db } from "./firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [user, setUser] = useState<User | null>(null);
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  const testLogin = async () => {
+    try {
+      await signInWithEmailAndPassword(
+        auth,
+        "test-member@test-union-achievement.com",   // 콘솔에서 만든 계정
+        "1234!@#$lg"           // 비밀번호
+      );
+      console.log("로그인 성공");
+    } catch (e) {
+      console.error("로그인 실패", e);
+    }
+  };
+
+  return <button onClick={testLogin}>테스트 로그인</button>;
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (!u) return;
+
+      setUser(u);
+
+      const ref = doc(db, "users", u.uid);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        await setDoc(ref, {
+          email: u.email,
+          role: "member",
+          createdAt: new Date(),
+        });
+      }
+    });
+
+    return unsub;
+  }, []);
+
+  if (!user) return <div>로그인 필요</div>;
+
+  return <div>로그인 성공</div>;
 }
 
-export default App
+export default App;
