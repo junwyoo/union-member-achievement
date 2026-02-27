@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import type { User } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
@@ -21,7 +21,22 @@ function App() {
     }
   };
 
-  return <button onClick={testLogin}>테스트 로그인</button>;
+
+  // 업적 불러오기
+
+  const loadAchievements = async () => {
+    const snap = await getDocs(collection(db, "achievements"));
+    snap.forEach(doc => {
+      console.log(doc.id, doc.data());
+    });
+  }
+
+  return (
+    <div>
+      <button onClick={testLogin}>테스트 로그인</button>
+      <button onClick={loadAchievements}>업적 불러오기</button>
+    </div>
+  );
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
