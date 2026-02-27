@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import type { User } from "firebase/auth";
-import { doc, getDoc, setDoc, collection, getDocs, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, getDocs, serverTimestamp, addDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
@@ -47,7 +47,25 @@ function App() {
       }
     );
 
-    console.log("업적 달성 저장 완료")
+    console.log("업적 달성 저장 완료");
+  }
+
+  // 활동 기록 추가 함수
+
+  const addAttendance = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      return;
+    }
+
+    await addDoc(collection(db, "activities"), {
+      userId: user.uid,
+      type: "attendance",
+      approved: true,
+      createdAt: serverTimestamp()
+    });
+
+    console.log("출석 기록 추가 완료");
   }
 
   return (
@@ -57,6 +75,7 @@ function App() {
       <button onClick={() => achieve("attend_5")}>
         업적 달성 테스트
       </button>
+      <button onClick={addAttendance}>출석 추가</button>
     </div>
   );
 
