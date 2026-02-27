@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import type { User } from "firebase/auth";
-import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, getDocs, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
@@ -31,10 +31,32 @@ function App() {
     });
   }
 
+  // 업적 달성 처리
+
+  const achieve = async (achievementId: string) => {
+    const user = auth.currentUser;
+    if (!user) {
+      return;
+    }
+
+    await setDoc(
+      doc(db, "users", user.uid, "userAchievements", achievementId),
+      {
+        achievedAt: serverTimestamp(),
+        rewardGiven: true
+      }
+    );
+
+    console.log("업적 달성 저장 완료")
+  }
+
   return (
     <div>
       <button onClick={testLogin}>테스트 로그인</button>
       <button onClick={loadAchievements}>업적 불러오기</button>
+      <button onClick={() => achieve("attend_5")}>
+        업적 달성 테스트
+      </button>
     </div>
   );
 
