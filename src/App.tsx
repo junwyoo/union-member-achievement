@@ -116,6 +116,15 @@ function App() {
           rewardPoint,
         });
 
+        await addDoc(collection(db, "pointTransaction"), {
+          userId: user.uid,
+          amount: rewardPoint,
+          type: "achievement",
+          referenceId: "attend_5",
+          createdAt: serverTimestamp(),
+          createdBy: "system"
+        });
+
         console.log("업적 자동 지급 완료");
       } else {
         console.log("이미 지급된 업적");
