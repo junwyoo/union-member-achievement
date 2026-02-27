@@ -132,6 +132,27 @@ function App() {
     }
   }
 
+  const calculateMyPoints = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      return;
+    }
+
+    const q = query(
+      collection(db, "pointTransaction"),
+      where("userId", "==", user.uid)
+    );
+
+    const snap = await getDocs(q);
+
+    let total = 0;
+    snap.forEach(doc => {
+      total += doc.data().amount;
+    });
+
+    console.log("현재 포인트", total);
+  }
+
   return (
     <div>
       <button onClick={testLogin}>테스트 로그인</button>
@@ -140,6 +161,9 @@ function App() {
         업적 달성 테스트
       </button>
       <button onClick={addAttendance}>출석 추가</button>
+      <button onClick={calculateMyPoints}>
+        내 포인트 확인
+      </button>
     </div>
   );
 
