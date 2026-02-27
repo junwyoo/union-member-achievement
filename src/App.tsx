@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import type { User } from "firebase/auth";
-import { doc, getDoc, setDoc, collection, getDocs, serverTimestamp, addDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, getDocs, serverTimestamp, addDoc, query, where } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
@@ -66,6 +66,61 @@ function App() {
     });
 
     console.log("출석 기록 추가 완료");
+
+    checkAttendanceAchievement();
+  }
+
+  // 출석 개수 세는 함수
+
+  const checkAttendanceAchievement = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      return;
+    }
+
+    const q = query(
+      collection(db, "activities"),
+      where("userId", "==", user.uid),
+      where("type", "==", "attendance"),
+      where("approved", "==", true)
+    );
+
+    const snap = await getDocs(q);
+    const count = snap.size;
+
+    console.log("출석 횟수:", count);
+
+    const achRef = doc(db, "achievements", "attend_5");
+    const achSnap = await getDoc(achRef);
+
+    if (!achSnap.exists()) {
+      return;
+    }
+
+    const { threshold, rewardPoint } = achSnap.data();
+
+    if (count >= threshold) {
+      const userAchRef = doc(
+        db,
+        "users",
+        user.uid,
+        "userAchievements",
+        "attend_5"
+      );
+
+      const userAchSnap = await getDoc(userAchRef);
+
+      if (!userAchSnap.exists()) {
+        await setDoc(userAchRef, {
+          achievedAt: serverTimestamp(),
+          rewardPoint,
+        });
+
+        console.log("업적 자동 지급 완료");
+      } else {
+        console.log("이미 지급된 업적");
+      }
+    }
   }
 
   return (
